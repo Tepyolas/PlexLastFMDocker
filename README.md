@@ -3,13 +3,7 @@
 - The usual intergration doesn't support track.updateNowPlaying; it only supports track.scrobble.
 - This results in a delay of ~50-80% of the song played before it updates last.fm now playing.
   - This updates using track.updateNowPlaying, which takes <10s
-  - Allows for instantly calling .fm to show your current playing track 
-
-### Designed to run as a vercel function. 
-- Simply fork git and setup in Vercel to run from Git
-- Add env variables (see below)
-- Add a firewall rule for 0.0.0.0/0 then another above it for your Plex server IP 
-  - *(blacklist all, whitelist plex server IP)*
+  - Allows for instantly calling .fm to show your current playing track
  
 ### Receives Plex Webhook events
 - Extracts artist, track name, album name
@@ -17,20 +11,27 @@
 - Sends 'scrobble' (>80% played) events as "track.scrobble"
 - Minor error handling
 
-## Requires Last.FM API Access
+## Setup
+### Designed to run as a vercel function. 
+- Simply fork git and setup in Vercel to run from Git
+- Add env variables in Vercel (see below)
+- Add a firewall rule for 0.0.0.0/0 then another above it for your Plex server IP 
+  - *(blacklist all, whitelist plex server IP)*
+
+### Requires Last.FM API Access + API_KEY env Variables
 - env.LAST_FM_API
 - env.LAST_FM_SK (secret key)
 - env.LAST_FM_SECRET
 - env.API_KEY (simply a string added to the URL call that's checked, an extra security step)
 
-## Simple NPM commands (run locally)
+### Simple NPM commands (run locally)
 ```
 npm install
 npm run build
 npm run start
 ```
 
-## Setup Plex
+### Setup Plex
 - Add a webhook to *(URL)*/api/webhook?apiKey=*API_KEY*
 
 ### Bash script for getting a LastFM permanent session key (env.LAST_FM_SECRET)
