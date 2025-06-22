@@ -1,11 +1,15 @@
 # Plex-LastFM
-Designed to run as a vercel function. 
+### Why?
+The usual intergration doesn't support track.updateNowPlaying; it only supports track.scrobble.
+This results in a delay of ~50-80% of the song played before it updates last.fm now playing.
+
+### Designed to run as a vercel function. 
 - Simply fork git and setup in Vercel to run from Git
 - Add env variables (see below)
 - Add a firewall rule for 0.0.0.0/0 then another above it for your Plex server IP 
   - *(blacklist all, whitelist plex server IP)*
  
-Receives Plex Webhook events
+### Receives Plex Webhook events
 - Extracts artist, track name, album name
 - Sends 'play' and 'resume' events as "track.updateNowPlaying"
 - Sends 'scrobble' (>80% played) events as "track.scrobble"
