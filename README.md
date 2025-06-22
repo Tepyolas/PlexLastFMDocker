@@ -2,6 +2,8 @@
 ### Why?
 - The usual intergration doesn't support track.updateNowPlaying; it only supports track.scrobble.
 - This results in a delay of ~50-80% of the song played before it updates last.fm now playing.
+  - This updates using track.updateNowPlaying, which takes <10s
+  - Allows for instantly calling .fm to show your current playing track 
 
 ### Designed to run as a vercel function. 
 - Simply fork git and setup in Vercel to run from Git
