@@ -4,7 +4,7 @@
 - Sends 'scrobble' (>80% played) events as "track.scrobble"
 - Minor error handling
 
-Simple NPM commands
+## Simple NPM commands
 ```
 npm install
 npm run build
