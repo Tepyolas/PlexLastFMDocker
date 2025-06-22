@@ -12,9 +12,10 @@ Receives Plex Webhook events
 - Minor error handling
 
 ## Requires Last.FM API Access
-- env.API_KEY
+- env.LAST_FM_API
 - env.LAST_FM_SK (secret key)
 - env.LAST_FM_SECRET
+- env.API_KEY (simply a string added to the URL call that's checked, an extra security step)
 
 ## Simple NPM commands (run locally)
 ```
@@ -22,6 +23,9 @@ npm install
 npm run build
 npm run start
 ```
+
+## Setup Plex
+- Add a webhook to *(URL)*/api/webhook?apiKey=*API_KEY*
 
 ### Bash script for getting a LastFM permanent session key (env.LAST_FM_SECRET)
 - Create an app at https://www.last.fm/api/account/create
