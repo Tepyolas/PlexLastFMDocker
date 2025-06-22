@@ -29,7 +29,7 @@ npm run start
 
 ### Bash script for getting a LastFM permanent session key (env.LAST_FM_SECRET)
 - Create an app at https://www.last.fm/api/account/create
-  - Change API_KEY to the created API_KEY (also to **env.API_KEY**)
+  - Change API_KEY to the created API_KEY (also to **env.LAST_FM_API**)
   - Change SHARED_KEY to the SHARED_KEY (also to **env.LAST_FM_SK**)
 - Run the script
 - When prompted, open the URL and authenticate
