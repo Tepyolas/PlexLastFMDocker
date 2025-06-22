@@ -1,4 +1,5 @@
 # Plex-LastFM
+Designed to run as a vercel function. Add a firewall rule for 0.0.0.0/0 then another above it for your Plex server IP (blacklist all, whitelist plex server IP)
 - Receives Plex Webhook events
   - Extracts artist, track name, album name
 - Sends 'play' and 'resume' events as "track.updateNowPlaying"
