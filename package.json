@@ -1,0 +1,17 @@
+{
+  "name": "@Tepyolas/PlexLastFM",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "14.2.3",
+    "@vercel/functions": "2.2.2",
+    "@vercel/edge-config": "1.4.0",
+    "axios": "1.10.0",
+    "crypto-js": "4.2.0"
+  }
+}
