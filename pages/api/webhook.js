@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import { get } from "@vercel/edge-config"; // This import seems unused in the provided code
-import axios from "axios"; // This import seems unused in the provided code
 const md5 = require("crypto-js/md5");
 
 // Configuration for the Edge runtime and matcher for the API route.
