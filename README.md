@@ -11,17 +11,17 @@ Receives Plex Webhook events
 - Sends 'scrobble' (>80% played) events as "track.scrobble"
 - Minor error handling
 
+## Requires Last.FM API Access
+- env.API_KEY
+- env.LAST_FM_SK (secret key)
+- env.LAST_FM_SECRET
+
 ## Simple NPM commands (run locally)
 ```
 npm install
 npm run build
 npm run start
 ```
-
-## Requires Last.FM API Access
-- env.API_KEY
-- env.LAST_FM_SK (secret key)
-- env.LAST_FM_SECRET
 
 ### Bash script for getting a LastFM permanent session key (env.LAST_FM_SECRET)
 - Create an app at https://www.last.fm/api/account/create
