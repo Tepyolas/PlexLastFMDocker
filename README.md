@@ -1,7 +1,7 @@
 # Plex-LastFM
 ### Why?
-The usual intergration doesn't support track.updateNowPlaying; it only supports track.scrobble.
-This results in a delay of ~50-80% of the song played before it updates last.fm now playing.
+- The usual intergration doesn't support track.updateNowPlaying; it only supports track.scrobble.
+- This results in a delay of ~50-80% of the song played before it updates last.fm now playing.
 
 ### Designed to run as a vercel function. 
 - Simply fork git and setup in Vercel to run from Git
