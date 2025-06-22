@@ -7,8 +7,8 @@
  
 ### Receives Plex Webhook events
 - Extracts artist, track name, album name
-- Sends 'play' and 'resume' events as "track.updateNowPlaying"
-- Sends 'scrobble' (>80% played) events as "track.scrobble"
+  - Sends 'play' and 'resume' events as "track.updateNowPlaying"
+  - Sends 'scrobble' (>80% played) events as "track.scrobble"
 - Minor error handling
 
 ## Setup
