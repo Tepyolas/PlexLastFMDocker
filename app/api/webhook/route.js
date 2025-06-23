@@ -87,34 +87,16 @@ function lastFmHook(track, artist, album, method, tries = 1) {
         // Handle specific Last.fm error codes (e.g., service outages, temporary issues)
         if (jsonResponse.error === 11 || jsonResponse.error === 16) {
           if (tries <= 5) {
-            console.warn(`Trying again in 2s
-            for $ {
-              method
-            },
-            error: $ {
-              jsonResponse.message
-            }.Attempts: $ {
-              tries
-            }`);
+            console.warn("Trying again in 2s for ", method, " attempt number: ", tries);
             await sleep(2000); // Wait for 2 seconds before retrying
             return lastFmHook(track, artist, album, method, tries + 1); // Recurse for retry, incrementing tries
           } else {
-            console.error(`Max retries reached
-            for $ {
-              method
-            }.Last error: $ {
-              jsonResponse.message
-            }`);
+            console.error("Max retries reached. Error: ", jsonResponse.message || "No error message provided.")
           }
         } else {
           // General error handling for non-OK responses
-          console.warn(`$ {
-            method
-          }
-          failed, Last.fm error: `, jsonResponse.message || "No error message provided.");
-          throw {
-            error: jsonResponse
-          }; // Re-throw to be caught by the outer try-catch
+          console.warn("failed, Last.fm error: ", jsonResponse.message || "No error message provided.");
+          throw {error: jsonResponse}; // Re-throw to be caught by the outer try-catch
         }
       } else {
         // Log success for OK responses
@@ -144,89 +126,54 @@ function lastFmHook(track, artist, album, method, tries = 1) {
  * @param {Request} request - The incoming Next.js API request object.
  * @returns {NextResponse} The response to send back to the client.
  */
-export async
-function POST(request) {
-  const {
-    searchParams
-  } = request.nextUrl;
+export async function POST(request) {
+  const { searchParams } = request.nextUrl;
   const apiKey = searchParams.get("apikey");
   if (!apiKey || apiKey != process.env.API_KEY) {
-    return NextResponse.json({
-      body: "Unauthorized"
-    },
-    {
-      status: 401
-    }); // 401 Unauthorized
+    return NextResponse.json({body: "Unauthorized", status: 401}); // 401 Unauthorized
   }
 
   try {
     // Prepare data
     const rawPayload = await request.json();
 
-    console.log(rawPayload)
+    console.error(rawPayload)
 
     // Empty payload
-    if (!rawPayload) {
-      return NextResponse.json({
-        body: "Webhook payload is missing from form data.",
-        status: 400
-      });
-    }
+    if (!rawPayload) { return NextResponse.json({body: "Webhook payload is missing from form data.", status: 400}); }
 
     const event = JSON.parse(rawPayload);
 
-    // Only process 'track' type metadata, not movies / etc.
-    if (event.Metadata.type !== "track") {
-      return NextResponse.json({
-        body: "Not a track. Skipping",
-        status: 400
-      });
-    }
+    console.error(event)
 
+    // Only process 'track' type metadata, not movies / etc.
+    if (event.Metadata.type !== "track") { return NextResponse.json({status: 204}); }
+    
     // Handle different media events and dispatch to Last.fm.
     switch (event.event) {
     case "media.play":
     case "media.resume":
-      // Title, Artist, Album, method (track.updateNowPlaying)
       await lastFmHook(event.Metadata.title, event.Metadata.grandparentTitle, event.Metadata.parentTitle, "track.updateNowPlaying");
       break;
     case "media.scrobble":
-      // Title, Artist, Album, method (track.scrobble)
       await lastFmHook(event.Metadata.title, event.Metadata.grandparentTitle, event.Metadata.parentTitle, "track.scrobble");
       break;
     case "media.pause":
     case "media.stop":
-      return NextResponse({
-        status:
-        204
-      });
+      return NextResponse({status:204});
       break;
     default:
-      console.warn(`Unhandled Plex event type:
-      $ {
-        event.event
-      }`);
-      return NextResponse({
-        status:
-        204
-      });
+      console.warn("Unhandled Plex event type: ", event.event);
+      return NextResponse({status:204});
       break;
     }
-
-    // 6. Respond indicating successful receipt and processing.
-    return NextResponse.json({
-      received:
-      true,
-      event: event.event,
-      {
-        status: 200,
-      });
-    } catch(error) {
-      // 7. Global error handling for any unexpected issues during processing.
-      console.error("Error processing Plex webhook:", error);
-      return NextResponse.json({
-        body: "Internal Server Error",
-        status: 500
-      }); // 500 Internal Server Error
+    return NextResponse.json({received: true, event: event.event, status: 200});
+    } catch(Exception e) {
+      console.(" processing Plex webhook:", e);
+      return NextResponse.json({body: "Internal Server error", status: 500}); // 500 Internal Server Error
     }
   }
+
+export async function GET(request) {
+  return NextResponse.json({body: "Invalid Method", status: 405 }); // 405 Invalid method
+}
