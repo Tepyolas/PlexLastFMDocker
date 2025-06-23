@@ -126,10 +126,9 @@ async function sendLastFmRequest(method, { track, artist, album }, attempt = 1) 
  * @param {Request} request - The incoming Next.js API request object.
  * @returns {Promise<NextResponse>}
  */
-export async function POST(request) {
+export async function POST(request, { params }) {
     // 1. Authenticate the request
-    const { searchParams } = request.nextUrl
-    const apiKey = searchParams.get("apikey");
+    const { apiKey } = params;
     console.log("Connection with API key: ", apiKey);
     if (apiKey !== WEBHOOK_API_KEY) {
         return createResponse(401, { error: "Unauthorized" });
