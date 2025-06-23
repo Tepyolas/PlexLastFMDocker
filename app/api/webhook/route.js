@@ -137,7 +137,7 @@ export async function POST(request, { params }) {
     try {
         // 2. Parse and validate the incoming payload
         const payload = await request.formData()
-        const jsonPayload = payload.get('payload')
+        const jsonPayload = JSON.parse(payload.get('payload'))
         console.log (jsonPayload);
         if (!jsonPayload || !jsonPayload.event || !jsonPayload.Metadata) {
             return createResponse(400, { error: "Invalid or missing webhook payload" });
