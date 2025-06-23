@@ -20,7 +20,7 @@ networks:
   - backnet
 ```
 
-Then accessed from the plex container (assuming same network) via http://plexfm/webhook?apiKey=<WEBHOOK_API_KEY>
+Then accessed from the plex container (assuming same network) via `http://plexfm/webhook?apiKey=<WEBHOOK_API_KEY>`
 
 ## Setup steps 
 ### Requires below env variables (change in docker-compose.yml code above)
