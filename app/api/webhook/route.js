@@ -168,8 +168,8 @@ export async function POST(request) {
       break;
     }
     return NextResponse.json({received: true, event: event.event, status: 200});
-    } catch(Exception e) {
-      console.(" processing Plex webhook:", e);
+    } catch(Exception) {
+      console.(" processing Plex webhook:", Exception);
       return NextResponse.json({body: "Internal Server error", status: 500}); // 500 Internal Server Error
     }
   }
