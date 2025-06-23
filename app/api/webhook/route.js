@@ -128,7 +128,9 @@ async function sendLastFmRequest(method, { track, artist, album }, attempt = 1) 
  */
 export async function POST(request) {
     // 1. Authenticate the request
-    const apiKey = request.nextUrl.searchParams.get("apikey");
+    const { searchParams } = request.nextUrl
+    const apiKey = searchParams.get("apikey");
+    console.log("Connection with API key: ", apiKey);
     if (apiKey !== WEBHOOK_API_KEY) {
         return createResponse(401, { error: "Unauthorized" });
     }
