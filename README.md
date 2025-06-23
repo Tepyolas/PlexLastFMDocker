@@ -97,3 +97,5 @@ echo "--- Success! Permanent Last.fm Session Key Obtained ---"
 echo ""Session Key: $(echo "$SESSION_RESPONSE" | jq -r '.session.key')"
 ```
 
+If I get bored, I'll make the bash script a docker startup script so it sets up on first run... Idk
+
