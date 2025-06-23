@@ -126,7 +126,7 @@ async function lastFmHook(track, artist, album, method, tries = 1) {
 export default async function handler(request) {
   // Method validation: Only allow POST requests.
   if (request.method !== "POST") {
-    return NextResponse.json("Method Not Allowed", { status: 405 }); // 405 Not allowed
+    return new NextResponse.json({ body: "Method Not Allowed" }, { status: 405 }); // 405 Not allowed
   }
 
   // API Key validation: Ensure apikey param matches env.API_KEY

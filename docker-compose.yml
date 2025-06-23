@@ -1,0 +1,12 @@
+
+version: "3"
+services:
+  app:
+    build: .
+    ports:
+      - 3000:3000
+    environment:
+      - API_KEY=123
+      - HOSTNAME=0.0.0.0
+      - NEXT_PUBLIC_APP_URL="http://localhost:3000"
+    network_mode: host
