@@ -8,8 +8,4 @@ services:
       - LAST_FM_API_KEY=key
       - LAST_FM_SHARED_SECRET=key
       - LAST_FM_SESSION_KEY=key
-      - WEBHOOK_API_KEY=123
-      - HOSTNAME=0.0.0.0
-      - NEXT_PUBLIC_APP_URL="http://localhost:3000"
-      - APP_URL=http://localhost:3000
-    network_mode: host
+      - WEBHOOK_API_KEY=key
