@@ -7,7 +7,7 @@ const nextConfig = {
   output: 'standalone',
   env: {
     HOSTNAME: '127.0.0.1',
-     NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+    NEXT_PUBLIC_APP_URL: "http://localhost:3000"
   },
 };
 
