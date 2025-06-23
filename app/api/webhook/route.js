@@ -127,22 +127,20 @@ async function sendLastFmRequest(method, { track, artist, album }, attempt = 1) 
  * @returns {Promise<NextResponse>}
  */
 export async function POST(request, { params }) {
-    // 1. Authenticate the request
+    // Authenticate the request
     const apiKey = request.nextUrl.searchParams.get("apiKey");
     console.log("Connection with API key: ", apiKey);
-    if (apiKey !== WEBHOOK_API_KEY) {
-        return createResponse(401, { error: "Unauthorized" });
-    }
+    if (apiKey !== WEBHOOK_API_KEY) { return createResponse(401, { error: "Unauthorized" }); }
 
     try {
-        // 2. Parse and validate the incoming payload
-        const jsonPayload = JSON.parse(await request.formData().get('payload'))
+        // Parse and validate the incoming payload
+        const payload = await request.formData()
+        const jsonPayload = JSON.parse(payload.get('payload'))
         console.log (jsonPayload);
-        if (!jsonPayload || !jsonPayload.event || !jsonPayload.Metadata) {
-            return createResponse(400, { error: "Invalid or missing webhook payload" });
-        }
 
-        const { event, Metadata } = jsonPayload;
+        // Replaces if statement - if this throws an error, payload is missing or melformed.
+        try { const { event, Metadata } = jsonPayload;
+        } catch { return createResponse(400, { error: "Invalid or missing webhook payload" }); }
 
         // We only care about music tracks
         if (Metadata.type !== "track") { 
