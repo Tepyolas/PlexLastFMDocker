@@ -139,10 +139,8 @@ export async function POST(request, { params }) {
         console.log (jsonPayload);
 
         // Replaces if statement - if this throws an error, payload is missing or melformed.
-        try {
-            const Metadata = jsonPayload.get('Metadata');
-            const event = jsonPayload.('event');
-        } catch { return createResponse(400, { error: "Invalid or missing webhook payload" }); }
+        const Metadata = jsonPayload.get('Metadata');
+        const event = jsonPayload.get('event');
 
         // We only care about music tracks
         if (Metadata.type !== "track") { return createResponse(204, { message: "Event is not a track, skipping." }); }
