@@ -146,7 +146,7 @@ export async function POST(request, { params }) {
         console.log(event)
 
         // We only care about music tracks
-        if (Metadata.type !== "track") { return createResponse(204, { message: "Event is not a track, skipping." }); }
+        if (Metadata.type !== "track") { return createResponse(204); }
 
         // Map Plex metadata to Last.fm parameters
         const trackInfo = {
