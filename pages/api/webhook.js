@@ -130,8 +130,8 @@ export default async function handler(request) {
   }
 
   // API Key validation: Ensure apikey param matches env.API_KEY
-  const url = new URL(request.url);
-  const apiKey = url.searchParams.get("apikey");
+  const { searchParams } = new URL(request.url);
+  const apiKey = searchParams.get("apikey");
   if (!apiKey || apiKey != process.env.API_KEY) {
     return NextResponse.json({body: "Unauthorized"}, { status: 401 }); // 401 Unauthorized
   }
