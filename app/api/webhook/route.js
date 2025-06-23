@@ -23,7 +23,8 @@ const RETRY_DELAY_MS = 2000;
  * @returns {NextResponse}
  */
 function createResponse(status, body = null) {
- return new NextResponse.json(body, { "status": status });
+    if (!body) { return new NextResponse(null, { "status": status }); }
+    return NextResponse.json(body, { "status": status })
 }
 
 /**
