@@ -136,11 +136,12 @@ export async function POST(request, { params }) {
         // Parse and validate the incoming payload
         const formData = await request.formData()
         const payload = formData.get('payload')
+        const jsonPayload = JSON.parse(payload)
         console.log (payload);
 
         // Replaces if statement - if this throws an error, payload is missing or melformed.
-        const Metadata = formData.get('Metadata');;
-        const event = formData.get('event');
+        const Metadata = jsonPayload.Metadata;;
+        const event = jsonPayload.event;
 
         // We only care about music tracks
         if (Metadata.type !== "track") { return createResponse(204, { message: "Event is not a track, skipping." }); }
