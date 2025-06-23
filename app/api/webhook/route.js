@@ -22,8 +22,8 @@ const RETRY_DELAY_MS = 2000;
  * @param {object | string} body - The response body.
  * @returns {NextResponse}
  */
-function createResponse(status, body) {
- return NextResponse.json(body, { "status": status});
+function createResponse(status, body = null) {
+ return NextResponse.json(body, { "status": status}?);
 }
 
 /**
@@ -168,7 +168,7 @@ export async function POST(request, { params }) {
 
             case "media.pause":
             case "media.stop":
-                return createResponse(204, { message: "Pause/Stop event ignored."});
+                return createResponse(204);
 
             default:
                 console.warn(`Unhandled Plex event type received: ${event}`);
