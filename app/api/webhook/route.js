@@ -43,11 +43,8 @@ function sleep(ms) {
  * @returns {URLSearchParams} A URLSearchParams object containing the signed payload.
  */
 function generateSecurePayload(params) {
-    const signatureString = Object.keys(params)
-        .sort()
-        .map((key) => key + params[key])
-        .join("");
-
+    // LastFM's required format - Sorted params, joint, MD% hashed with secret
+    const signatureString = Object.keys(params).sort().map((key) => key + params[key]).join("");
     const signature = md5(signatureString + LAST_FM_SHARED_SECRET).toString();
 
     return new URLSearchParams({
@@ -146,18 +143,18 @@ export async function POST(request) {
         const { event, Metadata } = payload;
 
         // We only care about music tracks
-        if (Metadata.type !== "track") {
-            return createResponse(204, { message: "Event is not a track, skipping." });
+        if (Metadata.type !== "track") { 
+            return createResponse(204, { message: "Event is not a track, skipping." }); 
         }
 
-        // 3. Map Plex metadata to Last.fm parameters
+        // Map Plex metadata to Last.fm parameters
         const trackInfo = {
             track: Metadata.title,
             artist: Metadata.grandparentTitle, // In Plex, grandparentTitle is the artist
             album: Metadata.parentTitle,       // parentTitle is the album
         };
 
-        // 4. Dispatch action based on the event type
+        // Dispatch action based on the event type
         switch (event) {
             case "media.play":
             case "media.resume":
@@ -170,7 +167,6 @@ export async function POST(request) {
 
             case "media.pause":
             case "media.stop":
-                // These events don't require action, so we respond with No Content.
                 return createResponse(204, { message: "Pause/Stop event ignored."});
 
             default:
@@ -179,17 +175,13 @@ export async function POST(request) {
         }
 
         return createResponse(200, { received: true, event: event });
-
+        
+    // Catch any errors unhandled by sendLastFmRequest
     } catch (error) {
-        console.error("Failed to process Plex webhook:", error.message || error);
+        console.error("Failed to process Plex webhook: ", error.message || error);
         return createResponse(500, { error: "Internal Server Error" });
     }
 }
 
-/**
- * Handles GET requests to this endpoint.
- * @returns {Promise<NextResponse>}
- */
-export async function GET() {
-    return createResponse(405, { error: "Method Not Allowed" });
-}
+// Handles GET requests
+export async function GET() { return createResponse(405, { error: "Method Not Allowed" }); }
