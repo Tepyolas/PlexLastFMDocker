@@ -129,22 +129,17 @@ function lastFmHook(track, artist, album, method, tries = 1) {
 export async function POST(request) {
   const { searchParams } = request.nextUrl;
   const apiKey = searchParams.get("apikey");
-  if (!apiKey || apiKey != process.env.API_KEY) {
-    return NextResponse.json({body: "Unauthorized", status: 401}); // 401 Unauthorized
-  }
+  if (!apiKey || apiKey != process.env.API_KEY) { return NextResponse.json({body: "Unauthorized", status: 401}); } // 401 Unauthorized
 
   try {
     // Prepare data
-    const rawPayload = await request.json();
+    const rawPayload = await request.json(); console.error(rawPayload);
 
-    console.error(rawPayload)
-
-    // Empty payload
+    // If empty payload
     if (!rawPayload) { return NextResponse.json({body: "Webhook payload is missing from form data.", status: 400}); }
-
-    const event = JSON.parse(rawPayload);
-
-    console.error(event)
+    
+    // Parse JSON
+    const event = JSON.parse(rawPayload); console.error(event);
 
     // Only process 'track' type metadata, not movies / etc.
     if (event.Metadata.type !== "track") { return NextResponse.json({status: 204}); }
@@ -160,19 +155,17 @@ export async function POST(request) {
       break;
     case "media.pause":
     case "media.stop":
-      return NextResponse({status:204});
+      return NextResponse.json({status:204});
       break;
     default:
       console.warn("Unhandled Plex event type: ", event.event);
-      return NextResponse({status:204});
+      return NextResponse.json({status:204});
       break;
+      return NextResponse.json({received: true, event: event.event, status: 200});
     }
-    return NextResponse.json({received: true, event: event.event, status: 200});
-    } catch(Exception) {
-      console.(" processing Plex webhook:", Exception);
-      return NextResponse.json({body: "Internal Server error", status: 500}); // 500 Internal Server Error
-    }
-  }
+  } catch(Exception) { console.error(" processing Plex webhook:", Exception);
+      return NextResponse.json({body: "Internal Server error", status: 500});}
+}
 
 export async function GET(request) {
   return NextResponse.json({body: "Invalid Method", status: 405 }); // 405 Invalid method
