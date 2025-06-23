@@ -13,6 +13,15 @@ services:
       - WEBHOOK_API_KEY=<Just a random string added to the url as apiKey param for security>
 ```
 
+## Note
+It can be used on a docker network, ie
+```
+networks:
+  - backnet
+```
+
+Then accessed from the plex container (assuming same network) via http://plexfm/webhook?apiKey=<WEBHOOK_API_KEY>
+
 ## Setup steps 
 ### Requires below env variables (change in docker-compose.yml code above)
 - LAST_FM_API_KEY=<API Key>
