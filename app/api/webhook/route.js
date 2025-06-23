@@ -1,172 +1,195 @@
-import {
-  NextResponse
-}
-from "next/server";
-const md5 = require("crypto-js/md5");
+import { NextResponse } from "next/server";
+import md5 from "crypto-js/md5";
+
+// --- Configuration ---
+const {
+    LAST_FM_API_KEY,
+    LAST_FM_SHARED_SECRET,
+    LAST_FM_SESSION_KEY,
+    WEBHOOK_API_KEY,
+} = process.env;
+
+const LAST_FM_API_URL = "https://ws.audioscrobbler.com/2.0/";
+const RETRYABLE_LAST_FM_ERRORS = [11, 16]; // Specific Last.fm server errors
+const MAX_RETRIES = 5;
+const RETRY_DELAY_MS = 2000;
+
+// --- Helper Functions ---
 
 /**
- * Generates a securely signed payload for Last.fm API requests.
- * @param {string} track - The title of the track.
- * @param {string} artist - The name of the artist.
- * @param {string} album - The name of the album.
- * @param {string} method - The Last.fm API method to call (e.g., "track.updateNowPlaying", "track.scrobble").
- * @returns {URLSearchParams} A URLSearchParams object containing the signed payload.
+ * Creates a standardized JSON response.
+ * @param {number} status - The HTTP status code.
+ * @param {object | string} body - The response body.
+ * @returns {NextResponse}
  */
-function generateSecurePayload(track, artist, album, method) {
-  const timestamp = Math.floor(Date.now() / 1000); // Current Unix timestamp
-  // Parameters for the Last.fm API request
-  const params = {
-    method: method,
-    artist: artist,
-    track: track,
-    album: album,
-    timestamp: timestamp,
-    api_key: process.env.LAST_FM_API,
-    sk: process.env.LAST_FM_SK,
-    // Session key
-  };
-
-  // Create the signature string by concatenating sorted parameter keys and values
-  // followed by the Last.fm secret.
-  const signatureString = Object.keys(params).sort().map((key) = >key + params[key]).join("");
-
-  // Generate MD5 hash of the signature string and Last.fm secret
-  const signature = md5(signatureString + process.env.LAST_FM_SECRET).toString();
-
-  // Return URLSearchParams with all parameters, including the generated signature and desired format.
-  return new URLSearchParams({...params,
-    api_sig: signature,
-    format: "json"
-  });
+function createResponse(status, body) {
+ return NextResponse.json(body, { status });
 }
 
 /**
- * A simple sleep function to pause execution for a given number of milliseconds.
+ * Pauses execution for a given number of milliseconds.
  * @param {number} ms - The number of milliseconds to sleep.
- * @returns {Promise<void>} A promise that resolves after the specified time.
+ * @returns {Promise<void>}
  */
 function sleep(ms) {
-  return new Promise((resolve) = >setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// --- Last.fm API Logic ---
+
+/**
+ * Generates a securely signed payload for a Last.fm API request.
+ * @param {object} params - The parameters for the API call.
+ * @returns {URLSearchParams} A URLSearchParams object containing the signed payload.
+ */
+function generateSecurePayload(params) {
+    const signatureString = Object.keys(params)
+        .sort()
+        .map((key) => key + params[key])
+        .join("");
+
+    const signature = md5(signatureString + LAST_FM_SHARED_SECRET).toString();
+
+    return new URLSearchParams({
+        ...params,
+        api_sig: signature,
+        format: "json",
+    });
 }
 
 /**
- * Sends a request to the Last.fm API to update now playing status or scrobble a track.
- * Includes retry logic for certain Last.fm API errors.
- * @param {string} track - The title of the track.
- * @param {string} artist - The name of the artist.
- * @param {string} album - The name of the album.
+ * Sends a request to the Last.fm API with automatic retries on failure.
  * @param {string} method - The Last.fm API method to call.
- * @param {number} [tries=1] - The current attempt number (for retry logic).
- * @returns {Promise<number>} A promise that resolves to 1 upon (likely) success.
+ * @param {object} trackInfo - Contains track, artist, and album.
+ * @param {string} trackInfo.track - The title of the track.
+ * @param {string} trackInfo.artist - The name of the artist.
+ * @param {string} trackInfo.album - The name of the album.
+ * @param {number} [attempt=1] - The current retry attempt number.
+ * @returns {Promise<object>} A promise that resolves with the JSON response from the API.
  */
-async
-function lastFmHook(track, artist, album, method, tries = 1) {
-  const apiUrl = "https://ws.audioscrobbler.com/2.0/";
-  const payload = generateSecurePayload(track, artist, album, method);
+async function sendLastFmRequest(method, { track, artist, album }, attempt = 1) {
+    const params = {
+        method,
+        artist,
+        track,
+        album,
+        timestamp: Math.floor(Date.now() / 1000),
+        api_key: LAST_FM_API_KEY,
+        sk: LAST_FM_SESSION_KEY,
+    };
 
-  try {
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
-      },
-      body: payload.toString(),
-    });
+    const payload = generateSecurePayload(params);
 
     try {
-      const responseText = await response.text();
-      const jsonResponse = JSON.parse(responseText);
+        const response = await fetch(LAST_FM_API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: payload.toString(),
+        });
 
-      // Check if the HTTP response was not OK
-      if (!response.ok) {
-        // Handle cases where Last.fm explicitly ignored scrobbles
-        if (jsonResponse && jsonResponse.scrobbles && jsonResponse.scrobbles["@attr"] && jsonResponse.scrobbles["@attr"]["ignored"] > 0) {
-          console.error("LastFM Ignored > 0 scrobbles, check response?", jsonResponse, "Status: ", response.status);
+        if (!response.ok) {
+            console.warn(`Last.fm API returned a non-OK status: ${response.status}`, await response.text());
         }
 
-        // Handle specific Last.fm error codes (e.g., service outages, temporary issues)
-        if (jsonResponse.error === 11 || jsonResponse.error === 16) {
-          if (tries <= 5) {
-            console.warn("Trying again in 2s for ", method, " attempt number: ", tries);
-            await sleep(2000); // Wait for 2 seconds before retrying
-            return lastFmHook(track, artist, album, method, tries + 1); // Recurse for retry, incrementing tries
-          } else {
-            console.error("Max retries reached. Error: ", jsonResponse.message || "No error message provided.")
-          }
-        } else {
-          // General error handling for non-OK responses
-          console.warn("failed, Last.fm error: ", jsonResponse.message || "No error message provided.");
-          throw {error: jsonResponse}; // Re-throw to be caught by the outer try-catch
+        const jsonResponse = await response.json();
+
+        // Handle Last.fm-specific errors that are retryable
+        if (RETRYABLE_LAST_FM_ERRORS.includes(jsonResponse.error)) {
+            if (attempt < MAX_RETRIES) {
+                console.warn(`Last.fm Error (Code: ${jsonResponse.error}). Retrying attempt ${attempt + 1}/${MAX_RETRIES} for ${method} in ${RETRY_DELAY_MS}ms...`);
+                await sleep(RETRY_DELAY_MS);
+                return sendLastFmRequest(method, { track, artist, album }, attempt + 1);
+            } else {
+                throw new Error(`Max retries reached for Last.fm API. Last error: ${jsonResponse.message}`);
+            }
         }
-      } else {
-        // Log success for OK responses
-        console.log(`$ {
-          method
+
+        // Handle other Last.fm errors
+        if (jsonResponse.error) {
+           throw new Error(`Last.fm API Error: ${jsonResponse.message} (Code: ${jsonResponse.error})`);
         }
-        was likely successful.Track: $ {
-          artist
-        } - $ {
-          track
-        }`);
-      }
-    } catch(parseError) {
-      // Catch errors during response text parsing or JSON parsing
-      console.error("Error parsing Last.fm API response: ", parseError);
+
+        // Log if scrobbles were ignored by the API
+        if (jsonResponse.scrobbles?.["@attr"]?.ignored > 0) {
+            console.warn("Last.fm ignored scrobbles. Details:", jsonResponse.scrobbles);
+        }
+
+        console.log(`Last.fm method '${method}' successful for: ${artist} - ${track}`);
+        return jsonResponse;
+
+    } catch (error) {
+        // Catches fetch errors, JSON parsing errors, and thrown errors from retry logic
+        console.error(`Error during Last.fm request for method '${method}':`, error.message);
+        throw error; // Re-throw to be caught by the main handler
     }
-  } catch(fetchError) {
-    // Catch errors during the fetch operation itself (e.g., network issues)
-    console.error("Error fetching Last.fm API URL: ", fetchError);
-  }
-  return 1; // Indicate completion (success or handled failure)
 }
 
 /**
- * Main handler for the webhook API route.
- * Processes incoming POST requests, validates them, and dispatches Last.fm actions.
+ * Handles incoming POST requests from a webhook.
  * @param {Request} request - The incoming Next.js API request object.
- * @returns {NextResponse} The response to send back to the client.
+ * @returns {Promise<NextResponse>}
  */
 export async function POST(request) {
-  const { searchParams } = request.nextUrl;
-  const apiKey = searchParams.get("apikey");
-  if (!apiKey || apiKey != process.env.API_KEY) { return NextResponse.json({body: "Unauthorized", status: 401}); } // 401 Unauthorized
-
-  try {
-    // Prepare data
-    const rawPayload = await request.json(); console.error(rawPayload);
-
-    // If empty payload
-    if (!rawPayload) { return NextResponse.json({body: "Webhook payload is missing from form data.", status: 400}); }
-    
-    // Parse JSON
-    const event = JSON.parse(rawPayload); console.error(event);
-
-    // Only process 'track' type metadata, not movies / etc.
-    if (event.Metadata.type !== "track") { return NextResponse.json({status: 204}); }
-    
-    // Handle different media events and dispatch to Last.fm.
-    switch (event.event) {
-    case "media.play":
-    case "media.resume":
-      await lastFmHook(event.Metadata.title, event.Metadata.grandparentTitle, event.Metadata.parentTitle, "track.updateNowPlaying");
-      break;
-    case "media.scrobble":
-      await lastFmHook(event.Metadata.title, event.Metadata.grandparentTitle, event.Metadata.parentTitle, "track.scrobble");
-      break;
-    case "media.pause":
-    case "media.stop":
-      return NextResponse.json({status:204});
-      break;
-    default:
-      console.warn("Unhandled Plex event type: ", event.event);
-      return NextResponse.json({status:204});
-      break;
-      return NextResponse.json({received: true, event: event.event, status: 200});
+    // 1. Authenticate the request
+    const apiKey = request.nextUrl.searchParams.get("apikey");
+    if (apiKey !== WEBHOOK_API_KEY) {
+        return createResponse(401, { error: "Unauthorized" });
     }
-  } catch(Exception) { console.error(" processing Plex webhook:", Exception);
-      return NextResponse.json({body: "Internal Server error", status: 500});}
+
+    try {
+        // 2. Parse and validate the incoming payload
+        const payload = await request.json();
+        if (!payload || !payload.event || !payload.Metadata) {
+            return createResponse(400, { error: "Invalid or missing webhook payload" });
+        }
+
+        const { event, Metadata } = payload;
+
+        // We only care about music tracks
+        if (Metadata.type !== "track") {
+            return createResponse(204, { message: "Event is not a track, skipping." });
+        }
+
+        // 3. Map Plex metadata to Last.fm parameters
+        const trackInfo = {
+            track: Metadata.title,
+            artist: Metadata.grandparentTitle, // In Plex, grandparentTitle is the artist
+            album: Metadata.parentTitle,       // parentTitle is the album
+        };
+
+        // 4. Dispatch action based on the event type
+        switch (event) {
+            case "media.play":
+            case "media.resume":
+                await sendLastFmRequest("track.updateNowPlaying", trackInfo);
+                break;
+
+            case "media.scrobble":
+                await sendLastFmRequest("track.scrobble", trackInfo);
+                break;
+
+            case "media.pause":
+            case "media.stop":
+                // These events don't require action, so we respond with No Content.
+                return createResponse(204, { message: "Pause/Stop event ignored."});
+
+            default:
+                console.warn(`Unhandled Plex event type received: ${event}`);
+                return createResponse(204, { message: `Unhandled event type: ${event}` });
+        }
+
+        return createResponse(200, { received: true, event: event });
+
+    } catch (error) {
+        console.error("Failed to process Plex webhook:", error.message || error);
+        return createResponse(500, { error: "Internal Server Error" });
+    }
 }
 
-export async function GET(request) {
-  return NextResponse.json({body: "Invalid Method", status: 405 }); // 405 Invalid method
+/**
+ * Handles GET requests to this endpoint.
+ * @returns {Promise<NextResponse>}
+ */
+export async function GET() {
+    return createResponse(405, { error: "Method Not Allowed" });
 }
