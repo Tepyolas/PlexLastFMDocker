@@ -133,7 +133,7 @@ export default async function handler(request) {
   const url = new URL(request.url);
   const apiKey = url.searchParams.get("apikey");
   if (!apiKey || apiKey != process.env.API_KEY) {
-    return NextResponse.json("Unauthorized", { status: 401 }); // 401 Unauthorized
+    return NextResponse.json({body: "Unauthorized"}, { status: 401 }); // 401 Unauthorized
   }
 
   try {
@@ -143,14 +143,14 @@ export default async function handler(request) {
 
     // Empty payload
     if (!rawPayload) {
-      return NextResponse.json("Webhook payload is missing from form data.", { status: 400 }); 
+      return NextResponse.json({body: "Webhook payload is missing from form data."}, { status: 400 }); 
     }
 
     const event = JSON.parse(rawPayload);
 
     // Only process 'track' type metadata, not movies / etc.
     if (event.Metadata.type !== "track") {
-      return NextResponse.json("Not a track. Skipping", { status: 400 });
+      return NextResponse.json({body: "Not a track. Skipping"}, { status: 400 });
     }
 
     // Handle different media events and dispatch to Last.fm.
@@ -166,25 +166,19 @@ export default async function handler(request) {
         break;
       case "media.pause":
       case "media.stop":
-        return new NextResponse(null, {status: 204});
+        return  NextResponse({status: 204});
         break;
       default:
         console.warn(`Unhandled Plex event type: ${event.event}`);
-        return new NextResponse(null, {status: 204});
+        return NextResponse({status: 204});
         break;
     }
 
     // 6. Respond indicating successful receipt and processing.
-    return NextResponse.json(
-      { received: true, event: event.event },
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    return NextResponse.json({ received: true, event: event.event }, {status: 200,});
   } catch (error) {
     // 7. Global error handling for any unexpected issues during processing.
     console.error("Error processing Plex webhook:", error);
-    return NextResponse.json("Internal Server Error", { status: 500 }); // 500 Internal Server Error
+    return NextResponse.json({body: "Internal Server Error"}, { status: 500 }); // 500 Internal Server Error
   }
 }
