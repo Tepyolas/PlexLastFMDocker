@@ -1,6 +1,6 @@
-version: "3"
 services:
-  app:
+  plexfm:
+    container_name: plexfm
     build: .
     ports:
       - 3000:3000
