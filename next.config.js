@@ -5,6 +5,10 @@ const nextConfig = {
   },
   reactStrictMode: true,
   output: 'standalone',
+  env: {
+    HOSTNAME: '127.0.0.1',
+     NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+  },
 };
 
 module.exports = nextConfig;
