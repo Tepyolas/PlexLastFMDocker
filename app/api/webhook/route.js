@@ -139,7 +139,13 @@ export async function POST(request, { params }) {
         console.log (jsonPayload);
 
         // Replaces if statement - if this throws an error, payload is missing or melformed.
-        const Metadata = jsonPayload.get('Metadata');
+        var Metadata = jsonPayload.get('Metadata');
+        console.log(Metadata);
+        Metadata = payload.get('payload.Metadata');
+        console.log(Metadata);
+        Metadata = payload.get('payload.Metadata');
+        console.log(Metadata);
+        Metadata = payload.get('payload').get('Metadata');
         const event = jsonPayload.get('event');
 
         // We only care about music tracks
