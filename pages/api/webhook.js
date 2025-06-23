@@ -1,12 +1,6 @@
 import { NextResponse } from "next/server";
 const md5 = require("crypto-js/md5");
 
-// Configuration for the Edge runtime and matcher for the API route.
-export const config = {
-  runtime: "edge",
-  matcher: "/api/webhook",
-};
-
 /**
  * Generates a securely signed payload for Last.fm API requests.
  * @param {string} track - The title of the track.
