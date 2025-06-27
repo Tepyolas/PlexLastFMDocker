@@ -31,8 +31,9 @@ Then accessed from the plex container (assuming same network) via `http://plexfm
 - LAST_FM_API_KEY=<API Key>
 - LAST_FM_SHARED_SECRET=<Shared secret>
 - LAST_FM_SESSION_KEY=<Session Key (see steps below)
-- WEBHOOK_API_KEY=<Just a random string that's added to the url (ie http://localhost:3000/webhook?apiKey=123
-  - This will be your webhook url, ie enter http://localhost:3000/webhook?apiKey=<WEBHOOK_API_KEY> into plex.
+- WEBHOOK_API_KEY=<A random string to append to requests as a param>
+  - This will be your webhook url, ie enter http://localhost:3000/webhook?apiKey=<WEBHOOK_API_KEY> into plex
+  - If plex is on the same docker network, you can use http://plexfm:3000/webhook?apiKey=<WEBHOOK_API_KEY> and remove exposing port 3000.
 
 ### LastFM Session Key Steps:
 - Create an app at https://www.last.fm/api/account/create
