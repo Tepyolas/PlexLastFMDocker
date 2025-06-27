@@ -1,4 +1,8 @@
-# Docker compose file
+# Details
+The official Plex-LastFM intergration doesn't support displaying what your currently playing, meaning you wait for a track.scrobble (>50% played) before it's available for things like .fm bot. This API supports the track.updateNowPlaying, meaning .fm bot can pull what you're listening to instantly!
+
+# Setup
+## Docker compose file
 ```
 services:
   plexfm:
